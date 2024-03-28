@@ -8,9 +8,8 @@ package app.service;
 import java.util.Random;
 //Ajuste este import para que sua classe de Arvore Binária seja importada
 import app.model.Aluno;
-import lib.ArvoreBinaria;
 //Aqui estou importando a interface IArvoreBinaria, a mesma que sua classe de Árvore Binaria deve implementar
-import lib.IArvoreBinaria;
+import lib.interfaces.IArvoreBinaria;
 
 /**
  *

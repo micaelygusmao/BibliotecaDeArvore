@@ -1,4 +1,4 @@
-package lib;
+package lib.model;
 
 public class No<T> {
     private T valor;

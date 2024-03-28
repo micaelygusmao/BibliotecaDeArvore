@@ -9,8 +9,8 @@ import app.comparators.ComparadorAlunoPorMatricula;
 import app.comparators.ComparadorAlunoPorNome;
 import app.model.Aluno;
 import app.service.GeradorDeArvores;
-import lib.ArvoreBinaria;
-import lib.IArvoreBinaria;
+import lib.model.ArvoreBinaria;
+import lib.interfaces.IArvoreBinaria;
 
 /**
  *

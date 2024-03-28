@@ -1,4 +1,6 @@
-package lib;
+package lib.model;
+
+import lib.interfaces.IArvoreBinaria;
 
 import java.util.Comparator;
 
