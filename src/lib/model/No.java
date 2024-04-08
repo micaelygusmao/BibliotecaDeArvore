@@ -12,6 +12,11 @@ public class No<T> {
         this.filhoEsquerda = null;
     }
 
+    @Override
+    public String toString(){
+        return "[" + valor.toString() + "] \n";
+    }
+
     /**
      * @return the valor
      */
@@ -59,7 +64,7 @@ public class No<T> {
      * @return caso tenha filhos a esquerda e a direita o retorno é false, se não tiver o retorno é true.
      */
      boolean IsFolha(){
-        if(this.TemFilhoAEsquerda() && this.TemFilhoADireita()) return true;
+        if(!this.TemFilhoAEsquerda() && !this.TemFilhoADireita()) return true;
 
         return false;
     }
@@ -95,10 +100,5 @@ public class No<T> {
         }
 
         return false;
-    }
-
-    No<T> GetNoPaiByFilho() {
-
-        return null;
     }
 }

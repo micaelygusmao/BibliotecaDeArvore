@@ -2,7 +2,9 @@ package lib.model;
 
 import lib.interfaces.IArvoreBinaria;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
     protected No<T> raiz = null;
@@ -41,42 +43,71 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
 
     @Override
     public T pesquisar(T valor) {
-        return null;
-    }
+        No<T> no = GetNoByValor(this.raiz, valor);
 
-    public void  GetNoDaEsquerda(No<T> no, T valor){}
+        if(no == null) {
+            System.out.println("ERROR: Não foi encontrado o nó escolhido.");
+            return null;
+        }
+
+        return no.getValor();
+    }
 
     @Override
     public T pesquisar(T valor, Comparator comparador) {
-        return null;
+        this.comparador = comparador;
+
+        No<T> no = GetNoByValor(this.raiz, valor);
+
+        if(no == null) {
+            System.out.println("ERROR: Não foi encontrado o nó escolhido.");
+            return null;
+        }
+
+        return no.getValor();
     }
 
     @Override
     public T remover(T valor) {
         No<T> noParaRemover = GetNoByValor(this.raiz, valor);
 
-        if(noParaRemover.IsFolha()){
-            //o nó que tinha ele como filho passa a apontar para null
-            SetAlteracaoPai(noParaRemover, null);
+        if(noParaRemover == null){
+            System.out.println("ERROR: Não foi encontrado o nó para remover.");
         } else {
-            if(noParaRemover.TemApenasUmFilho()){
-                //o nó que tinha ele como filho passar ter o filho dele como filho
-                if(noParaRemover.TemFilhoADireita()) {
-                    SetAlteracaoPai(noParaRemover, noParaRemover.getFilhoDireita());
-                    return valor;
-                }
-
-                if(noParaRemover.TemFilhoAEsquerda()) {
-                    SetAlteracaoPai(noParaRemover, noParaRemover.getFilhoEsquerda());
-                    return valor;
-                }
-
-                return valor;
+            if(noParaRemover.IsFolha()){
+                //o nó que tinha ele como filho passa a apontar para null
+                SetAlteracaoPai(noParaRemover, null);
             } else {
-                //pegar o maior nó da subárvore da esquerda e copiar o valor do substituto para o nó que
-                // está sendo removido e então remover o substituto da árvore.
+                if(noParaRemover.TemApenasUmFilho()){
+                    //o nó que tinha ele como filho passar ter o filho dele como filho
+                    if(noParaRemover.TemFilhoADireita()) {
+                        SetAlteracaoPai(noParaRemover, noParaRemover.getFilhoDireita());
+                        return valor;
+                    }
+
+                    if(noParaRemover.TemFilhoAEsquerda()) {
+                        SetAlteracaoPai(noParaRemover, noParaRemover.getFilhoEsquerda());
+                        return valor;
+                    }
+
+                    return valor;
+                } else {
+                    No<T> maiorNo = GetMaiorValorSubArvoreEsquerda(noParaRemover.getFilhoEsquerda());
+                    //o pai do maior no vai passar a apontar para null
+                    SetAlteracaoPai(maiorNo, null);
+
+                    //o pai do nó para remover vai apontar para o maior no da esquerda
+                    SetAlteracaoPai(noParaRemover, maiorNo);
+
+                    maiorNo.setFilhoDireita(noParaRemover.getFilhoDireita());
+
+                    if(!maiorNo.TemFilhoAEsquerda()) {
+                        maiorNo.setFilhoEsquerda(noParaRemover.getFilhoEsquerda());
+                    }
+                }
             }
         }
+
         return null;
     }
 
@@ -104,21 +135,30 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @return o nó pai.
      */
     public No<T> GetNoPaiByFilho(No<T> no, T valorFilho) {
+        No<T> pai = null;
+
         if (no == null) { return null; }
 
-        if(no.TemFilhoADireita() && comparador.compare(no.getFilhoEsquerda().getValor(), valorFilho) == 0){
-            return no;
+        if(!no.IsFolha()){
+            if(!IsValorNoMenor(no, valorFilho)){
+                if(no.TemFilhoAEsquerda()){
+                    if(IsNoDaBusca(no.getFilhoEsquerda(), valorFilho)){
+                        return no;
+                    } else {
+                        pai = GetNoPaiByFilho(no.getFilhoEsquerda(), valorFilho);
+                    }
+                }
+            } else {
+                if(no.TemFilhoAEsquerda()){
+                    if(IsNoDaBusca(no.getFilhoDireita(), valorFilho)){
+                        return no;
+                    } else {
+                        pai = GetNoPaiByFilho(no.getFilhoDireita(), valorFilho);
+                    }
+                }
+            }
         }
 
-        if(no.TemFilhoAEsquerda() && comparador.compare(no.getFilhoDireita().getValor(), valorFilho) == 0){
-            return no;
-        }
-
-        No<T> pai = GetNoPaiByFilho(raiz.getFilhoDireita(), valorFilho);
-
-        if (pai == null) {
-            pai = GetNoPaiByFilho(raiz.getFilhoEsquerda(), valorFilho);
-        }
         return pai;
     }
 
@@ -131,9 +171,9 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
     public No<T> GetNoByValor(No<T> no, T valor){
         if(IsNoDaBusca(no, valor)){ return no;  }
 
-        if(no.TemFilhoADireita() && IsValorNoMaior(no, valor)){ return GetNoByValor(no.getFilhoDireita(), valor); }
+        if(no.TemFilhoADireita() && !IsValorNoMaior(no, valor)){ return GetNoByValor(no.getFilhoDireita(), valor); }
 
-        if(no.TemFilhoAEsquerda() && IsValorNoMenor(no, valor)){  return GetNoByValor(no.getFilhoEsquerda(), valor); }
+        if(no.TemFilhoAEsquerda() && !IsValorNoMenor(no, valor)){  return GetNoByValor(no.getFilhoEsquerda(), valor); }
 
         return null;
     }
@@ -176,6 +216,23 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
         return false;
     }
 
+    /**
+     * Método para pegar o maior valor da subarvore da esquerda da raiz passada como parametro
+     * @param raiz - será utilizada como indice de partida para procurar o maior.
+     * @return caso seja encontrado, o nó é retornado. Se não, retorna null.
+     */
+    public No<T> GetMaiorValorSubArvoreEsquerda(No<T> raiz){
+        if(raiz == null) {
+            return null; // Se a raiz for nula, retorna null
+        }
+
+        if(raiz.TemFilhoADireita()){
+            return GetMaiorValorSubArvoreEsquerda(raiz.getFilhoDireita());
+        }
+
+        return raiz; // Se não tiver filho à direita, retorna a própria raiz
+    }
+
     @Override
     public int altura() {
         int alturaEsquerda = AlturaDaEsquerda(this.raiz, 0);
@@ -183,6 +240,12 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
         return 1 + Math.max(alturaEsquerda, alturaDireita);
     }
 
+    /**
+     * Método para pegar a altura da subarvore da esquerda
+     * @param no - será utilizada como indice de partida para começar a contagem.
+     * @param contd - será utilizada como contador para o número que será retornado.
+     * @return um inteiro que representará a altura.
+     */
     public int AlturaDaEsquerda(No<T> no, int contd){
         if(no == null) return -1;
 
@@ -193,6 +256,12 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
         return contd;
     }
 
+    /**
+     * Método para pegar a altura da subarvore da direita
+     * @param no - será utilizada como indice de partida para começar a contagem.
+     * @param contd - será utilizada como contador para o número que será retornado.
+     * @return um inteiro que representará a altura.
+     */
     public int AlturaDaDireita(No<T> no, int contd){
         if(no == null) return -1;
 
@@ -209,6 +278,11 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
         return percorreTodaArvore(this.raiz);
     }
 
+    /**
+     * Método para percorrer e contar a quantidade de nós que tem na arvore.
+     * @param no - será utilizada como indice de partida para começar a contagem.
+     * @return um inteiro que representará a quantidade de nós da árvore.
+     */
     private int percorreTodaArvore(No<T> no) {
         if (no == null) {
             return 0;
@@ -219,11 +293,77 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
 
     @Override
     public String caminharEmNivel() {
-        return null;
+        int qtdNos = quantidadeNos();
+        String retorno = "";
+        List<No<T>> lista = new ArrayList<>();
+
+        caminharEmNivelRecursivamente(this.raiz, qtdNos, lista);
+
+        for (int i = 0; i < lista.size(); i++){
+            retorno += lista.get(i).toString();
+        }
+
+        return retorno;
     }
 
+    /**
+     * Método para percorrer a árvore em nivel
+     * @param no - será utilizada como indice de partida.
+     * @param qtd - quantidade de nós que se espera percorrer.
+     * @param lista - terá todos os nós da árvore na ordem esperada.
+     * @return a lista com os nós da árvore percorridos em nivel.
+     */
+    public List<No<T>> caminharEmNivelRecursivamente(No<T> no, int qtd, List<No<T>> lista){
+        if(lista.isEmpty()){
+            lista.add(no);
+        }
+
+        if(lista.size() == qtd){
+            return lista;
+        } else {
+            if(no.TemFilhoAEsquerda()){
+                lista.add(no.getFilhoEsquerda());
+            }
+
+            if(no.TemFilhoADireita()){
+                lista.add(no.getFilhoDireita());
+            }
+
+            if(no.TemFilhoAEsquerda()){
+                return caminharEmNivelRecursivamente(no.getFilhoEsquerda(), qtd, lista);
+            }
+
+            if(no.TemFilhoADireita()){
+                return caminharEmNivelRecursivamente(no.getFilhoDireita(), qtd, lista);
+            }
+        }
+        return lista;
+    }
     @Override
     public String caminharEmOrdem() {
-        return null;
+        List<No<T>> lista = new ArrayList<>();
+        String retorno = "";
+
+        caminharEmOrdemRecursivamente(this.raiz, lista);
+
+        for (int i = 0; i < lista.size(); i++){
+            retorno += lista.get(i).toString();
+        }
+
+        return retorno;
+    }
+
+    /**
+     * Método para percorrer a árvore em nivel
+     * @param no - será utilizada como indice de partida.
+     * @param lista - terá todos os nós da árvore na ordem esperada.
+     * @return a lista com os nós da árvore percorridos em ordem.
+     */
+    private void caminharEmOrdemRecursivamente(No<T> no,  List<No<T>> lista) {
+        if (no != null) {
+            caminharEmOrdemRecursivamente(no.getFilhoEsquerda(), lista);
+            lista.add(no);
+            caminharEmOrdemRecursivamente(no.getFilhoDireita(), lista);
+        }
     }
 }
