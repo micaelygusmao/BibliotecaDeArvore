@@ -17,6 +17,11 @@ public class Aluno  {
         this.nome = nome;        
     }
 
+    @Override
+    public String toString(){
+        return "Matricula: " + matricula + " - Nome: " + nome;
+    }
+
 
     public int getMatricula() {
         return matricula;
