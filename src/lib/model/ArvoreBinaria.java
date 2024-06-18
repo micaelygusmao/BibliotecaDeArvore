@@ -55,9 +55,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
 
     @Override
     public T pesquisar(T valor, Comparator comparador) {
-        this.comparador = comparador;
-
-        No<T> no = GetNoByValor(this.raiz, valor);
+        No<T> no = GetNoByValorComparador(this.raiz, valor, comparador);
 
         if(no == null) {
             System.out.println("ERROR: Não foi encontrado o nó escolhido.");
@@ -119,11 +117,11 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
     public void SetAlteracaoPai(No<T> noParaRemover, No<T> novoFilho){
         No<T> pai = GetNoPaiByFilho(this.raiz, noParaRemover.getValor());
 
-        if(pai.TemFilhoAEsquerda() && IsNoDaBusca(pai.getFilhoEsquerda(), noParaRemover.getValor())){
+        if(pai.TemFilhoAEsquerda() && IsNoDaBusca(pai.getFilhoEsquerda(), noParaRemover.getValor(), null)){
             pai.setFilhoEsquerda(novoFilho);
         }
 
-        if(pai.TemFilhoADireita() && IsNoDaBusca(pai.getFilhoDireita(), noParaRemover.getValor())){
+        if(pai.TemFilhoADireita() && IsNoDaBusca(pai.getFilhoDireita(), noParaRemover.getValor(), null)){
             pai.setFilhoDireita(novoFilho);
         }
     }
@@ -134,7 +132,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @param valorFilho - valor do filho que está sendo usadno para buscar o pai.
      * @return o nó pai.
      */
-    public No<T> GetNoPaiByFilho(No<T> no, T valorFilho) {
+    private No<T> GetNoPaiByFilho(No<T> no, T valorFilho) {
         No<T> pai = null;
 
         if (no == null) { return null; }
@@ -142,7 +140,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
         if(!no.IsFolha()){
             if(!IsValorNoMenor(no, valorFilho)){
                 if(no.TemFilhoAEsquerda()){
-                    if(IsNoDaBusca(no.getFilhoEsquerda(), valorFilho)){
+                    if(IsNoDaBusca(no.getFilhoEsquerda(), valorFilho, null)){
                         return no;
                     } else {
                         pai = GetNoPaiByFilho(no.getFilhoEsquerda(), valorFilho);
@@ -150,7 +148,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
                 }
             } else {
                 if(no.TemFilhoAEsquerda()){
-                    if(IsNoDaBusca(no.getFilhoDireita(), valorFilho)){
+                    if(IsNoDaBusca(no.getFilhoDireita(), valorFilho, null)){
                         return no;
                     } else {
                         pai = GetNoPaiByFilho(no.getFilhoDireita(), valorFilho);
@@ -169,7 +167,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @return o nó que tem o valor passado por parâmetro.
      */
     public No<T> GetNoByValor(No<T> no, T valor){
-        if(IsNoDaBusca(no, valor)){ return no;  }
+        if(IsNoDaBusca(no, valor, null)){ return no;  }
 
         if(no.TemFilhoADireita() && !IsValorNoMaior(no, valor)){ return GetNoByValor(no.getFilhoDireita(), valor); }
 
@@ -179,12 +177,32 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
     }
 
     /**
+     * Método para fazer uma busca no nó utilizando um comparador genérico
+     * @param no - nó cujo valor será verificado.
+     * @param comparador - comparador que será utilizado.
+     * @return o nó que será buscado, pode ser null caso não ache o nó.
+     */
+    private No<T> GetNoByValorComparador(No<T> no, T valor, Comparator comparador){
+        if(IsNoDaBusca(no, valor, comparador)){ return no;  }
+
+        No<T> noBusca = null;
+
+        noBusca = GetNoByValorComparador(no.getFilhoDireita(), valor, comparador);
+
+        if(noBusca == null){
+            noBusca = GetNoByValorComparador(no.getFilhoEsquerda(), valor, comparador);
+        }
+
+        return noBusca;
+    }
+
+    /**
      * Método para verificar se o nó tem um valor maior que o valor passado como parâmetro
      * @param no - nó cujo valor será verificado.
      * @param valor - valor que será utilizado para verificar o nó.
      * @return caso o valor do nó seja maior o retorno é false, se não for retorno é true.
      */
-    public boolean IsValorNoMaior(No<T> no, T valor){
+    private boolean IsValorNoMaior(No<T> no, T valor){
         if(comparador.compare(no.getValor(), valor) > 0) { return true; }
 
         return false;
@@ -196,7 +214,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @param valor - valor que será utilizado para verificar o nó.
      * @return caso o valor do nó seja menor o retorno é false, se não for retorno é true.
      */
-    public boolean IsValorNoMenor(No<T> no, T valor){
+    private boolean IsValorNoMenor(No<T> no, T valor){
         if(comparador.compare(no.getValor(), valor) < 0) { return true; }
 
         return false;
@@ -207,7 +225,11 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @param no - será utilizado para verificar se o nó é o procurado.
      * @return caso não seja o nó procurado o retorno é false, se for retorno é true.
      */
-    public boolean IsNoDaBusca(No<T> no, T valor){
+    private boolean IsNoDaBusca(No<T> no, T valor, Comparator comparador){
+        if(comparador == null){
+            comparador = this.comparador;
+        }
+
         if(no.getValor() != null){
             if(comparador.compare(valor, no.getValor()) == 0){  return true; }
             return false;
@@ -221,7 +243,7 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
      * @param raiz - será utilizada como indice de partida para procurar o maior.
      * @return caso seja encontrado, o nó é retornado. Se não, retorna null.
      */
-    public No<T> GetMaiorValorSubArvoreEsquerda(No<T> raiz){
+    private No<T> GetMaiorValorSubArvoreEsquerda(No<T> raiz){
         if(raiz == null) {
             return null; // Se a raiz for nula, retorna null
         }
@@ -235,43 +257,25 @@ public class ArvoreBinaria<T> implements IArvoreBinaria<T> {
 
     @Override
     public int altura() {
-        int alturaEsquerda = AlturaDaEsquerda(this.raiz, 0);
-        int alturaDireita = AlturaDaDireita(this.raiz, 0);
-        return 1 + Math.max(alturaEsquerda, alturaDireita);
+        return AlturaRecorrente(this.raiz);
     }
 
-    /**
-     * Método para pegar a altura da subarvore da esquerda
-     * @param no - será utilizada como indice de partida para começar a contagem.
-     * @param contd - será utilizada como contador para o número que será retornado.
-     * @return um inteiro que representará a altura.
-     */
-    public int AlturaDaEsquerda(No<T> no, int contd){
-        if(no == null) return -1;
+    private int AlturaRecorrente(No<T> no){
+        if(no == null){
+            return 0;
+        } else if(no.getFilhoEsquerda() == null && no.getFilhoDireita() == null){
+            return 0;
+        } else {
+            int alturaDireita = AlturaRecorrente(no.getFilhoDireita());
+            int alturaEsquerda = AlturaRecorrente(no.getFilhoEsquerda());
 
-        if(no.getFilhoEsquerda() != null){
-            contd = AlturaDaEsquerda(no.getFilhoEsquerda(), contd + 1);
+            if(alturaDireita > alturaEsquerda){
+                return 1 + alturaDireita;
+            } else {
+                return 1 + alturaEsquerda;
+            }
         }
-
-        return contd;
     }
-
-    /**
-     * Método para pegar a altura da subarvore da direita
-     * @param no - será utilizada como indice de partida para começar a contagem.
-     * @param contd - será utilizada como contador para o número que será retornado.
-     * @return um inteiro que representará a altura.
-     */
-    public int AlturaDaDireita(No<T> no, int contd){
-        if(no == null) return -1;
-
-        if(no.getFilhoDireita() != null){
-            contd = AlturaDaDireita(no.getFilhoDireita(), contd + 1);
-        }
-
-        return contd;
-    }
-
 
     @Override
     public int quantidadeNos() {
